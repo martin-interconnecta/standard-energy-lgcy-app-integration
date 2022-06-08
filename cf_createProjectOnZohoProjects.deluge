@@ -1,0 +1,112 @@
+map cf_createProjectOnZohoProjects(map data, map new_deal)
+{
+portalId = "679272219";
+dealId = new_deal.get("new_deal").get("id");
+dealInfo = zoho.crm.getRecordById("Deals",dealId);
+info "deal info: " + dealInfo;
+acctInfo = zoho.crm.getRecordById("Accounts",dealInfo.get("Account_Name").get("id"));
+info "acct info: " + acctInfo;
+templateId = "1367943000000236203";
+//info "channel Partner:" + acctInfo.get("Channel_Partner");
+params = Map();
+params.put("name",dealInfo.get("Deal_Name"));
+params.put("public","yes");
+params.put("start_date",now.toDate().toString("MM-dd-yyyy"));
+params.put("end_date",now.toDate().addDay(1).toString("MM-dd-yyyy"));
+params.put("description","");
+params.put("template_id",templateId);
+params.put("UDF_CHAR22",ifnull(dealInfo.get("Panel_Type"),""));
+params.put("UDF_CHAR2",ifnull(dealInfo.get("Panel_Qty"),""));
+params.put("UDF_CHAR4",ifnull(dealInfo.get("Inverter_Qty"),""));
+params.put("UDF_CHAR7",ifnull(dealInfo.get("Project_Number").get("name"),""));
+params.put("UDF_CHAR8",ifnull(dealInfo.get("Financing"),""));
+params.put("UDF_CHAR9",ifnull(dealInfo.get("Sales_Source"),""));
+//info "customer sig date" + dealInfo.get("Customer_Signature_Date");
+params.put("UDF_DATE1",ifnull(dealInfo.get("Customer_Signature_Date").toString("MM-dd-yyyy"),""));
+params.put("UDF_CHAR11",ifnull(dealInfo.getJSON("County_AHJ"),""));
+params.put("UDF_CHAR12",ifnull(dealInfo.get("Utility"),""));
+params.put("UDF_DOUBLE1",ifnull(dealInfo.get("System_Size"),""));
+params.put("UDF_CHAR14",ifnull(dealInfo.get("Inverter"),""));
+params.put("UDF_CHAR3",ifnull(dealInfo.get("HOA_Approval_Required"),""));
+params.put("UDF_DOUBLE3",ifnull(dealInfo.get("Amount"),""));
+params.put("UDF_CHAR6",ifnull(dealInfo.get("Roof_Replacement_Repair_Required"),""));
+params.put("UDF_CHAR5",ifnull(dealInfo.get("In_Historic_District"),""));
+params.put("UDF_TEXT1",ifnull(dealInfo.get("Sales_Notes"),""));
+params.put("UDF_LONG3",acctInfo.get("id").toLong());
+//contactId = zoho.crm.getRelatedRecords("Contacts","Accounts",acctInfo.get("id").toLong());
+//params.put("UDF_LONG1",contactId.toLong());
+params.put("UDF_LONG1",ifnull(dealInfo.get("Contact_Name").get("id"),""));
+params.put("UDF_CHAR10",ifnull(acctInfo.get("Billing_Street"),""));
+params.put("UDF_CHAR13",ifnull(acctInfo.get("Billing_City"),""));
+params.put("UDF_CHAR15",ifnull(acctInfo.get("Billing_State"),""));
+params.put("UDF_CHAR16",ifnull(acctInfo.get("Billing_Code"),""));
+params.put("UDF_CHAR18",ifnull(acctInfo.get("Client_Email"),""));
+params.put("UDF_CHAR19",ifnull(acctInfo.get("Partner_Email"),""));
+//params.put("UDF_LONG2",ifnull(dealInfo.get("Channel_Partner").get("id"),""));
+params.put("UDF_CHAR21",ifnull(dealInfo.get("Battery_Storage"),""));
+params.put("UDF_CHAR20",ifnull(dealInfo.get("Storage_System"),""));
+//params.put("UDF_CHAR29",ifnull(dealInfo.get("SalesRep_Email"),""));
+//After FIX
+params.put("UDF_LONG7",ifnull(dealInfo.get("LGCY_id"),""));
+params.put("UDF_LONG4",ifnull(dealInfo.get("Customer_ID"),""));
+params.put("UDF_CHAR35",ifnull(dealInfo.get("Proposal_PDF"),""));
+params.put("UDF_CHAR36",ifnull(dealInfo.get("Docs_Packet_File_Path"),""));
+params.put("UDF_LONG6",ifnull(dealInfo.get("Term_Years"),""));
+params.put("UDF_CHAR37",ifnull(dealInfo.get("Lender_Name"),""));
+params.put("UDF_LONG5",ifnull(dealInfo.get("Loan_APR"),0));
+params.put("UDF_CHAR38",ifnull(dealInfo.get("Dealer_Fee_Increase_Percentage"),""));
+params.put("UDF_DOUBLE4",ifnull(dealInfo.get("Dealer_Fee_Increase_Total_Cost"),""));
+params.put("UDF_CHAR30",ifnull(dealInfo.get("Adders_Name"),""));
+params.put("UDF_DOUBLE5",ifnull(dealInfo.get("Adders_Total_Cost"),""));
+params.put("UDF_LONG2",3660439000018520012);
+params.put("UDF_CHAR22",ifnull(dealInfo.get("Panel_Type"),""));
+params.put("UDF_CHAR2",ifnull(dealInfo.get("Panel_Qty"),""));
+params.put("UDF_CHAR4",ifnull(dealInfo.get("Inverter_Qty"),""));
+params.put("UDF_CHAR8",ifnull(dealInfo.get("Financing"),""));
+params.put("UDF_CHAR9",ifnull(dealInfo.get("Sales_Source"),""));
+params.put("UDF_CHAR12",ifnull(dealInfo.get("Utility"),""));
+params.put("UDF_CHAR14",ifnull(dealInfo.get("Inverter"),""));
+params.put("UDF_CHAR3",ifnull(dealInfo.get("HOA_Approval_Required"),""));
+params.put("UDF_CHAR32",ifnull(dealInfo.get("SalesRep_Name"),""));
+params.put("UDF_CHAR34",ifnull(dealInfo.get("SalesRep_Email"),""));
+params.put("UDF_CHAR33",ifnull(dealInfo.get("SalesRep_Phone"),""));
+params.put("UDF_CHAR39","Yes");
+info "params: " + params;
+url = "https://projectsapi.zoho.com/restapi/portal/" + portalId + "/projects/";
+//info url;
+createprojects = invokeurl
+[
+	url :url
+	type :POST
+	parameters:params
+	connection:"projects"
+];
+info "createprojects = " + createprojects;
+projectId = createprojects.get("id");
+//info "project id: " + projectId;
+//associate zoho project
+dealMap = Map();
+dealMap.put("name",dealInfo.get("Deal_Name"));
+dataList = List();
+dataList.add(dealMap);
+dataMap = Map();
+dataMap.put("data",dataList);
+//info dataMap;
+linkProject = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v2/Deals/" + dealId + "/Zoho_Projects/" + projectId
+	type :POST
+	parameters:dataMap.toString()
+	connection:"zoho_crm"
+];
+//info "link Project: " + linkProject;
+/*
+sendmail
+[
+	from :zoho.adminuserid
+	to :"martin@interconnecta.com"
+	subject :"new SES project created"
+	message :"<div>Create Projects<br></div><div>" + createprojects + "<br></div>"
+]*/
+return createprojects;
+}

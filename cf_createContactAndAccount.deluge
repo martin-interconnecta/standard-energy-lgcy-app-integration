@@ -1,0 +1,49 @@
+map cf_createContactAndAccount(map new_deal, map data)
+{
+docRequest = data.get("docRequest");
+data_labels = docRequest.get("data_labels");
+account_first_name = ifNull(data_labels.get("customer_first_name"),"");
+account_last_name = ifNull(data_labels.get("customer_last_name"),"");
+Account_Name = account_last_name.concat(", ").concat(account_first_name);
+Account_Type = "Residential";
+Billing_City = ifNull(data.get("city"),"");
+Billing_Country = ifNull(data.get("stateCode").get("country"),"");
+Billing_State = ifNull(data.get("stateCode").get("state"),"");
+Billing_Code = ifNull(data.get("zip"),"");
+Billing_Street = ifNull(data.get("address"),"");
+fullName = ifNull(data.get("fullName"),"");
+Client_Email = ifNull(data.get("email"),"");
+Primary_Phone = ifNull(data.get("phone"),"");
+upd_map = Map();
+upd_map.put("Account_Name",Account_Name);
+upd_map.put("Account_Type",Account_Type);
+upd_map.put("Billing_City",Billing_City);
+upd_map.put("Billing_Country",Billing_Country);
+upd_map.put("Billing_State",Billing_State);
+upd_map.put("Billing_Code",Billing_Code);
+upd_map.put("Billing_Street",Billing_Street);
+upd_map.put("Client_Email",Client_Email);
+upd_map.put("Primary_Phone",Primary_Phone);
+create_account = zoho.crm.createRecord("Accounts",upd_map);
+contact_map = Map();
+contact_map.put("Account_Name",create_account.get("id").toLong());
+contact_map.put("First_Name",account_first_name);
+contact_map.put("Last_Name",account_last_name);
+contact_map.put("Account_Type",Account_Type);
+contact_map.put("Mailing_City",Billing_City);
+contact_map.put("Mailing_State",Billing_State);
+contact_map.put("Mailing_Zip",Billing_Code);
+contact_map.put("Mailing_Street",Billing_Street);
+contact_map.put("Email",Client_Email);
+contact_map.put("Phone",Primary_Phone);
+create_contact = zoho.crm.createRecord("Contacts",contact_map);
+//Update deal
+deal_id = new_deal.get("new_deal").get("id");
+deal_update = zoho.crm.updateRecord("Deals",deal_id,{"Account_Name":create_account.get("id"),"Contact_Name":create_contact.get("id")});
+response = Map();
+response.put("create_account",create_account);
+response.put("create_contact",create_contact);
+response.put("deal_update",deal_update);
+//response.put("event",event);
+return response;
+}

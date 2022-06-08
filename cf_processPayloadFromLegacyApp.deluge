@@ -1,0 +1,187 @@
+map cf_processPayloadFromLegacyApp(map data, string event)
+{
+lgcy_id = data.get("id");
+docRequest = data.get("docRequest");
+value_questions = data.get("value_questions");
+firstNote = data.get("firstNote");
+salesRep = data.get("salesRep");
+data_labels = docRequest.get("data_labels");
+pricing = docRequest.get("pricing");
+customer_id = ifNull(docRequest.get("customer_id"),"");
+customer_first_name = ifNull(data_labels.get("customer_first_name"),"");
+customer_last_name = ifNull(data_labels.get("customer_last_name"),"");
+deal_name = customer_last_name.concat(", ").concat(customer_first_name);
+//proposal_id = ifNull(docRequest.get("proposal_id"),"");
+system_size_kW = ifNull(data_labels.get("system_size_kW"),"");
+salesRep_email = ifNull(data.get("salesRep").get("email"),"");
+/*
+sales_rep_name = ifNull(data_labels.get("sales_rep_name"),"");
+battery_count = ifNull(data_labels.get("battery_count"),"");
+number_of_inverters = ifNull(data_labels.get("number_of_inverters"),"");
+inverter_brand = ifNull(data_labels.get("inverter_brand"),"");
+number_of_modules = ifNull(data_labels.get("number_of_modules"),"");
+*/
+date_sold = ifNull(data.get("date_sold").toDate(),"");
+//system_size_ac = ifNull(data_labels.get("system_size_ac"),"");
+proposal_pdf = ifNull(docRequest.get("proposal_pdf"),"");
+docs_packet_file_path = ifNull(docRequest.get("docs_packet_file_path"),"");
+netCost = ifNull(pricing.get("netCost").round(2),"");
+termYears = ifNull(pricing.get("paymentDetails").get("termYears"),"");
+lender_name = ifNull(data_labels.get("lender_name"),"");
+loan_apr = ifNull(toLong(data_labels.get("loan_apr")),0);
+percentage = ifNull(pricing.get("pricing").get("dealerFeeIncrease").get("percentage"),"");
+totalCost = ifNull(pricing.get("pricing").get("dealerFeeIncrease").get("totalCost"),"");
+email = ifNull(data.get("email"),"");
+fullName = ifNull(data.get("fullName"),"");
+phone = ifNull(data.get("phone"),"");
+address = ifNull(data.get("address"),"");
+city = ifNull(data.get("city"),"");
+stateCode = ifNull(data.get("stateCode").get("code"),"");
+zip = ifNull(data.get("zip"),"");
+if(!isEmpty(docRequest.get("adders")))
+{
+	adders_name = ifNull(docRequest.get("adders").get(0).get("name"),"");
+	adders_totalCost = ifNull(docRequest.get("adders").get(0).get("totalCost"),"");
+}
+//New fields
+panel = ifNull(data_labels.get("panel"),"");
+number_of_modules = ifNull(data_labels.get("number_of_modules"),"");
+number_of_inverters = ifNull(data_labels.get("number_of_inverters"),"");
+lender_name = ifNull(data_labels.get("lender_name"),"");
+utility_company = ifNull(data_labels.get("utility_company"),"");
+inverter = ifNull(data_labels.get("inverter_model"),"");
+HOA_Approval_Required = "";
+if(!isEmpty(value_questions))
+{
+	for each  question in value_questions
+	{
+		if(question.get("title") == "HOA?")
+		{
+			//key exists
+			HOA_Approval_Required = IF(question.get("value") == "no",false,true);
+		}
+	}
+}
+Sales_Notes = "";
+if(!isNull(firstNote))
+{
+	if(firstNote.containKey("note"))
+	{
+		//key exists
+		Sales_Notes = firstNote.get("note").subString(0,250);
+	}
+}
+if(inverter.startsWith("IQ7PLUS"))
+{
+	inveter_text = "IQ7+";
+}
+else if(inverter.startsWith("IQ7"))
+{
+	inveter_text = "IQ7";
+}
+else if(inverter.startsWith("SolarEdge"))
+{
+	inveter_text = "SolarEdge";
+}
+else if(inverter.startsWith("SMA"))
+{
+	inveter_text = "SMA";
+}
+else
+{
+	inveter_text = inverter;
+}
+SalesRep_Name = "";
+SalesRep_Email = "";
+SalesRep_Phone = "";
+if(!isNull(salesRep))
+{
+	SalesRep_Name = salesRep.get("first_name").concat(" ").concat(salesRep.get("last_name"));
+	SalesRep_Email = ifNull(salesRep.get("email"),"");
+	SalesRep_Phone = ifNull(salesRep.get("phone"),"");
+}
+battery_count = ifNull(data_labels.get("battery_count"),"");
+if(isNumber(battery_count))
+{
+	if(battery_count > 0)
+	{
+		battery_count = "Yes";
+	}
+	else
+	{
+		battery_count = "No";
+	}
+}
+else
+{
+	battery_count = "";
+}
+inverter_model = ifNull(data_labels.get("inverter_model"),"");
+upd_map = Map();
+upd_map.put("LGCY_id",lgcy_id);
+upd_map.put("Deal_Name",deal_name);
+upd_map.put("Stage","Qualification");
+upd_map.put("Customer_ID",toString(customer_id));
+upd_map.put("System_Size",system_size_kW);
+upd_map.put("Project_Manager_Email",salesRep_email);
+upd_map.put("Customer_Signature_Date",date_sold);
+upd_map.put("Proposal_PDF",proposal_pdf);
+upd_map.put("Docs_Packet_File_Path",docs_packet_file_path);
+upd_map.put("Amount",netCost);
+upd_map.put("Term_Years",toString(termYears));
+upd_map.put("Lender_Name",lender_name);
+upd_map.put("Loan_APR",loan_apr);
+upd_map.put("Dealer_Fee_Increase_Percentage",percentage);
+upd_map.put("Dealer_Fee_Increase_Total_Cost",totalCost);
+upd_map.put("Client_Email",email);
+upd_map.put("Project_Name",fullName);
+upd_map.put("Primary_Phone",phone);
+upd_map.put("Address",address);
+upd_map.put("City",city);
+upd_map.put("State_Code",stateCode);
+upd_map.put("Zip",zip);
+upd_map.put("Adders_Name",adders_name);
+upd_map.put("Adders_Total_Cost",adders_totalCost);
+//LGCY POWER
+upd_map.put("Channel_Partner",3660439000018520012);
+upd_map.put("Layout",3660439000039560001);
+//New fields
+upd_map.put("Panel_Type",panel);
+upd_map.put("Panel_Qty",number_of_modules);
+upd_map.put("Inverter_Qty",number_of_inverters);
+upd_map.put("Financing",lender_name);
+upd_map.put("Sales_Source","LGCY Power");
+upd_map.put("County_AHJ","");
+upd_map.put("Utility",utility_company);
+upd_map.put("Inverter",inveter_text);
+upd_map.put("HOA_Approval_Required",HOA_Approval_Required);
+upd_map.put("Roof_Replacement_Repair_Required","");
+//validar
+upd_map.put("In_Historic_District","");
+upd_map.put("Sales_Notes",Sales_Notes);
+upd_map.put("SalesRep_Name",SalesRep_Name);
+upd_map.put("SalesRep_Email",SalesRep_Email);
+upd_map.put("SalesRep_Phone",SalesRep_Phone);
+upd_map.put("Battery_Storage",battery_count);
+upd_map.put("Storage_System","");
+upd_map.put("Project_Manager_Email",SalesRep_Email);
+//validar
+//Despues de reunión con Brian
+upd_map.put("Closing_Date",today.toDate());
+upd_map.put("Deal_Category","Residential Solar");
+upd_map.put("Lead_Source","Partner");
+upd_map.put("Inverter_Model",inverter_model);
+//Project Number Creation
+pn_map = Map();
+pn_map.put("Currency","USD");
+pn_map.put("Deal_Name",fullName);
+project_number = zoho.crm.createRecord("Project_Numbers",pn_map);
+project_number_id = project_number.get("id");
+upd_map.put("Project_Number",project_number_id);
+upd_map.put("Comes_from_LGCY_App",true);
+create = zoho.crm.createRecord("Deals",upd_map);
+response = Map();
+response.put("new_deal",create);
+//response.put("event",event);
+return response;
+}

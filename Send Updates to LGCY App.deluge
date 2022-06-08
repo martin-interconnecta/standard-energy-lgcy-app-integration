@@ -1,0 +1,141 @@
+cf_map = Map();
+ID_Fields = Map();
+Sales_Fields = Map();
+Accounting_Fields = Map();
+Project_Fields = Map();
+Customer_Info = Map();
+payload = Map();
+LGCY_endpoint = "https://panel.lgcypower.com/cron/updateStandardEnergy";
+project_info = invokeurl
+[
+	url :"https://projectsapi.zoho.com/restapi/portal/standardenergysolutions5/projects/" + project_id + "/"
+	type :GET
+	connection:"zoho_projects"
+];
+//info project_info;
+if(!project_info.containKey("error"))
+{
+	project_info = project_info.get("projects").get(0);
+	custom_fields = project_info.get("custom_fields");
+	if(!isEmpty(custom_fields))
+	{
+		for each  key_value in custom_fields
+		{
+			cf_map.putAll(key_value);
+		}
+		//info cf_map;
+		payload.put("custom_fields",cf_map);
+	}
+	updated_date_format = ifNull(project_info.get("updated_date_format"),"");
+	id = ifNull(project_info.get("id"),"");
+	owner_name = ifNull(project_info.get("owner_name"),"");
+	created_by = ifNull(project_info.get("created_by"),"");
+	created_date_format = ifNull(project_info.get("created_date_format"),"");
+	name = ifNull(project_info.get("name"),"");
+	updated_by = ifNull(project_info.get("updated_by"),"");
+	status = ifNull(project_info.get("status"),"");
+	project_percent = ifNull(project_info.get("project_percent"),"");
+	milestone_count = ifNull(project_info.get("milestone_count"),"");
+	key = ifNull(project_info.get("key"),"");
+	start_date = ifNull(project_info.get("start_date"),"");
+	created_date = ifNull(project_info.get("created_date"),"");
+	updated_date = ifNull(project_info.get("updated_date"),"");
+	payload.put("updated_date_format",updated_date_format);
+	payload.put("id",id);
+	payload.put("owner_name",owner_name);
+	payload.put("created_by",created_by);
+	payload.put("created_date_format",created_date_format);
+	payload.put("name",name);
+	payload.put("updated_by",updated_by);
+	payload.put("status",status);
+	payload.put("project_percent",project_percent);
+	payload.put("milestone_count",milestone_count);
+	payload.put("key",key);
+	payload.put("start_date",start_date);
+	payload.put("created_date",created_date);
+	payload.put("updated_date",updated_date);
+	/*
+	ID_Fields.put("Deal ID","");
+	ID_Fields.put("Sales Rep Email","");
+	ID_Fields.put("Solo Customer ID","");
+	ID_Fields.put("Solo Proposal ID","");
+	payload.put("id_fields",ID_Fields);
+	Sales_Fields.put("Customer Signed Contract","");
+	Sales_Fields.put("Milestone 1 Payment","");
+	Sales_Fields.put("Milestone 2 Payment","");
+	Sales_Fields.put("Cancelled","");
+	Sales_Fields.put("At Risk / Inactive","");
+	payload.put("sales_fields",Sales_Fields);
+	Accounting_Fields.put("EPC Price","");
+	Accounting_Fields.put("Product Type","");
+	Accounting_Fields.put("Deal Type","");
+	Accounting_Fields.put("Dealer Fee Amount","");
+	Accounting_Fields.put("Dealer Fee %","");
+	Accounting_Fields.put("Adders Description","");
+	Accounting_Fields.put("Adders","");
+	Accounting_Fields.put("Utility","");
+	payload.put("accounting_fields",Accounting_Fields);
+	Project_Fields.put("Status","");
+	payload.put("project_fields",Project_Fields);
+	Customer_Info.put("Full Name","");
+	Customer_Info.put("First Name","");
+	Customer_Info.put("Last Name","");
+	Customer_Info.put("Address","");
+	Customer_Info.put("City","");
+	Customer_Info.put("State","");
+	Customer_Info.put("Zip","");
+	Customer_Info.put("Email","");
+	Customer_Info.put("Phone","");
+	payload.put("customer_info",Customer_Info);
+	*/
+	//info payload;
+	//TASKS
+	payload_tasks = List();
+	mandatory_tasks = {"Project Submission Complete","Initial layout approved","Complete plan sets","Confirm site survey completed","Receive stamped plans","Receive Permit","PTI received","Installation Date","Confirm Installation Complete","Receive inspection sticker","PTO received"};
+	request = invokeurl
+	[
+		url :"https://projectsapi.zoho.com/restapi/portal/standardenergysolutions5/projects/" + project_id + "/tasks/"
+		type :GET
+		connection:"zoho_projects"
+	];
+	//info request;
+	tasks = request.get("tasks");
+	if(!isEmpty(tasks))
+	{
+		for each  task in tasks
+		{
+			task_name = task.get("name");
+			if(mandatory_tasks.contains(task_name))
+			{
+				temp_map = Map();
+				temp_map.put("name",ifNull(task.get("name"),""));
+				temp_map.put("id",ifNull(task.get("id"),""));
+				temp_map.put("start_date_format",ifNull(task.get("start_date_format"),""));
+				temp_map.put("completed",ifNull(task.get("completed"),""));
+				temp_map.put("last_updated_time_format",ifNull(task.get("last_updated_time_format"),""));
+				temp_map.put("completed_time_format",ifNull(task.get("completed_time_format"),""));
+				temp_map.put("key",ifNull(task.get("key"),""));
+				payload_tasks.add(temp_map);
+				//info task;
+			}
+		}
+		//info payload_tasks;
+		payload.put("tasks",payload_tasks);
+		//info payload;
+	}
+	//Send to LGCY
+	lgcy_response = invokeurl
+	[
+		url :LGCY_endpoint
+		type :POST
+		parameters:toString(payload)
+	];
+	info lgcy_response;
+	mail = sendmail
+	[
+		from :zoho.adminuserid
+		to :"martin@interconnecta.com"
+		subject :"Sending update to LGCY App"
+		message :toString(payload) + " - " + lgcy_response
+	];
+}
