@@ -30,14 +30,14 @@ termYears = ifNull(pricing.get("paymentDetails").get("termYears"),"");
 lender_name = ifNull(data_labels.get("lender_name"),"");
 loan_apr = ifNull(toLong(data_labels.get("loan_apr")),0);
 percentage = ifNull(pricing.get("pricing").get("dealerFeeIncrease").get("percentage"),"");
-totalCost = ifNull(pricing.get("pricing").get("dealerFeeIncrease").get("totalCost"),"");
+totalCost = ifNull(pricing.get("pricing").get("dealerFeeIncrease").get("totalCost").round(4),0);
 email = ifNull(data.get("email"),"");
 fullName = ifNull(data.get("fullName"),"");
-phone = ifNull(data.get("phone"),"");
+phone = ifNull(data.get("phone").toString(),"");
 address = ifNull(data.get("address"),"");
 city = ifNull(data.get("city"),"");
 stateCode = ifNull(data.get("stateCode").get("code"),"");
-zip = ifNull(data.get("zip"),"");
+zip = ifNull(data.get("zip").toString(),"");
 if(!isEmpty(docRequest.get("adders")))
 {
 	adders_name = ifNull(docRequest.get("adders").get(0).get("name"),"");
@@ -98,7 +98,7 @@ if(!isNull(salesRep))
 {
 	SalesRep_Name = salesRep.get("first_name").concat(" ").concat(salesRep.get("last_name"));
 	SalesRep_Email = ifNull(salesRep.get("email"),"");
-	SalesRep_Phone = ifNull(salesRep.get("phone"),"");
+	SalesRep_Phone = ifNull(salesRep.get("phone").toString(),"");
 }
 battery_count = ifNull(data_labels.get("battery_count"),"");
 if(isNumber(battery_count))
@@ -123,7 +123,7 @@ upd_map.put("Deal_Name",deal_name);
 upd_map.put("Stage","Qualification");
 upd_map.put("Customer_ID",toString(customer_id));
 upd_map.put("System_Size",system_size_kW);
-upd_map.put("Project_Manager_Email",salesRep_email);
+//upd_map.put("Project_Manager_Email",salesRep_email);
 upd_map.put("Customer_Signature_Date",date_sold);
 upd_map.put("Proposal_PDF",proposal_pdf);
 upd_map.put("Docs_Packet_File_Path",docs_packet_file_path);
@@ -131,7 +131,7 @@ upd_map.put("Amount",netCost);
 upd_map.put("Term_Years",toString(termYears));
 upd_map.put("Lender_Name",lender_name);
 upd_map.put("Loan_APR",loan_apr);
-upd_map.put("Dealer_Fee_Increase_Percentage",percentage);
+upd_map.put("Dealer_Fee_Increase_Percentage",toString(percentage));
 upd_map.put("Dealer_Fee_Increase_Total_Cost",totalCost);
 upd_map.put("Client_Email",email);
 upd_map.put("Project_Name",fullName);
@@ -164,7 +164,7 @@ upd_map.put("SalesRep_Email",SalesRep_Email);
 upd_map.put("SalesRep_Phone",SalesRep_Phone);
 upd_map.put("Battery_Storage",battery_count);
 upd_map.put("Storage_System","");
-upd_map.put("Project_Manager_Email",SalesRep_Email);
+//upd_map.put("Project_Manager_Email",SalesRep_Email);
 //validar
 //Despues de reunión con Brian
 upd_map.put("Closing_Date",today.toDate());
