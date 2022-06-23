@@ -50,7 +50,6 @@ number_of_inverters = ifNull(data_labels.get("number_of_inverters"),"");
 lender_name = ifNull(data_labels.get("lender_name"),"");
 utility_company = ifNull(data_labels.get("utility_company"),"");
 inverter = ifNull(data_labels.get("inverter_model"),"");
-HOA_Approval_Required = "";
 if(!isEmpty(value_questions))
 {
 	for each  question in value_questions
@@ -58,7 +57,14 @@ if(!isEmpty(value_questions))
 		if(question.get("title") == "HOA?")
 		{
 			//key exists
-			HOA_Approval_Required = IF(question.get("value") == "no",false,true);
+			if(question.get("value") == "no")
+			{
+				HOA_Approval_Required = "No";
+			}
+			else if(question.get("value") == "yes")
+			{
+				HOA_Approval_Required = "Yes";
+			}
 		}
 	}
 }
@@ -179,7 +185,8 @@ project_number = zoho.crm.createRecord("Project_Numbers",pn_map);
 project_number_id = project_number.get("id");
 upd_map.put("Project_Number",project_number_id);
 upd_map.put("Comes_from_LGCY_App",true);
-create = zoho.crm.createRecord("Deals",upd_map);
+optionalMap = {"trigger":{"workflow"}};
+create = zoho.crm.createRecord("Deals",upd_map,optionalMap);
 response = Map();
 response.put("new_deal",create);
 //response.put("event",event);
